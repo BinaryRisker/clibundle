@@ -6,6 +6,8 @@ const { mainMenu } = require('../lib/ui');
 const InitManager = require('../lib/init');
 const ConfigManager = require('../lib/config');
 const PackageManager = require('../lib/package-manager');
+const AIConfigManager = require('../lib/ai-config');
+const { applyAIProfile } = require('../lib/ai-apply');
 
 program
   .name('clibundle')
@@ -127,6 +129,138 @@ program
       const isInstalled = installedTools.some(t => t.id === tool.id);
       const status = isInstalled ? '✓ Installed' : '✗ Not installed';
       console.log(`${tool.name} (${tool.id}): ${status}`);
+    }
+  });
+
+// AI: init
+program
+  .command('ai:init')
+  .description('Initialize AI configuration file')
+  .action(async () => {
+    const initManager = new InitManager();
+    await initManager.init();
+  });
+
+// AI: list providers and tools
+program
+  .command('ai:list')
+  .description('List AI providers and tool configurations')
+  .action(() => {
+    const ai = new AIConfigManager();
+    const providers = ai.getProfiles();
+    
+    console.log('\nAI Providers:');
+    console.log('=============');
+    for (const p of providers) {
+      console.log(`- ${p.name}`);
+      console.log(`    type: ${p.type}`);
+      console.log(`    model: ${p.model}`);
+      console.log(`    baseUrl: ${p.baseUrl}`);
+      console.log(`    apiKey: ${p.apiKey || '(not set)'}`);
+      console.log('');
+    }
+
+    const toolsConfig = ai.getToolsConfig();
+    if (Object.keys(toolsConfig).length > 0) {
+      console.log('Tool Configurations:');
+      console.log('====================');
+      for (const [toolId, config] of Object.entries(toolsConfig)) {
+        const status = config.enabled ? '✓' : '✗';
+        console.log(`${status} ${toolId} → ${config.provider}`);
+      }
+      console.log('');
+    }
+  });
+
+// AI: switch profile (v2.0 compatibility)
+program
+  .command('ai:switch <profile>')
+  .description('Switch active AI profile (applies to all tools)')
+  .action((profile) => {
+    try {
+      const ai = new AIConfigManager();
+      const p = ai.setActiveProfile(profile);
+      console.log(`Active AI profile switched to: ${p.name}`);
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
+    }
+  });
+
+// AI: set tool provider (v2.1 new)
+program
+  .command('ai:set <toolId> <provider>')
+  .description('Set provider for a specific tool')
+  .action((toolId, provider) => {
+    try {
+      const ai = new AIConfigManager();
+      const p = ai.setToolProvider(toolId, provider);
+      console.log(`Tool ${toolId} now uses provider: ${p.name}`);
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
+    }
+  });
+
+// AI: enable/disable tool
+program
+  .command('ai:enable <toolId>')
+  .description('Enable a tool')
+  .action((toolId) => {
+    try {
+      const ai = new AIConfigManager();
+      ai.enableTool(toolId, true);
+      console.log(`Tool ${toolId} enabled`);
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('ai:disable <toolId>')
+  .description('Disable a tool')
+  .action((toolId) => {
+    try {
+      const ai = new AIConfigManager();
+      ai.enableTool(toolId, false);
+      console.log(`Tool ${toolId} disabled`);
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
+    }
+  });
+
+
+// AI: apply configurations
+program
+  .command('ai:apply')
+  .description('Apply AI configurations to tools')
+  .option('-p, --profile <name>', 'Apply single provider to all tools (v2.0 compatibility)')
+  .option('-t, --tool <toolId>', 'Apply configuration for a specific tool only')
+  .action(async (options) => {
+    try {
+      const { profile, tool } = options || {};
+      const result = await applyAIProfile({ profileName: profile, toolId: tool });
+      
+      if (result.profile) {
+        // v2.0 compatibility mode
+        console.log(`\nApplied Provider: ${result.profile}`);
+      } else {
+        // v2.1 multi-tool mode
+        console.log('\nApplied Tools:');
+        for (const [toolId, providerName] of Object.entries(result.tools)) {
+          console.log(`- ${toolId} → ${providerName}`);
+        }
+      }
+      
+      console.log('\nResults:');
+      for (const r of result.results) {
+        console.log(`- ${r.ok ? '✓' : '✗'} ${r.target} [${r.type}] -> ${r.file}${r.ok ? '' : `  (${r.error})`}`);
+      }
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
     }
   });
 

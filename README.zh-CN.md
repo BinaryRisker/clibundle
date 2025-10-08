@@ -9,6 +9,7 @@
 - 🎯 交互式命令行界面
 - 📁 用户配置文件存储在 `~/.clibundle` 目录
 - 🚀 支持批量操作
+- 🤖 支持大模型配置与切换，复用多工具映射
 
 ## 安装
 
@@ -70,6 +71,64 @@ clibundle uninstall <工具名称>
 clibundle uninstall --all
 ```
 
+### AI 模型与工具
+
+初始化 AI 配置（在 `~/.clibundle/ai.json` 生成默认文件）：
+
+```bash
+clibundle ai:init
+```
+
+查看 AI 配置的提供商与工具状态：
+
+```bash
+clibundle ai:list
+```
+
+#### 多工具协作（v2.1 新功能）
+
+为不同工具设置不同的提供商，实现多 AI 协作：
+
+```bash
+# 为 Claude Code 设置 Anthropic 提供商
+clibundle ai:set claude-code "Anthropic Official"
+
+# 为 Codex 设置 OpenAI 提供商  
+clibundle ai:set openai-codex "OpenAI Official"
+
+# 为 Gemini CLI 设置 Google 提供商
+clibundle ai:set google-gemini "Google Gemini"
+
+# 启用/禁用特定工具
+clibundle ai:enable iflow-cli
+clibundle ai:disable iflow-cli
+```
+
+应用配置：
+
+```bash
+# 应用所有启用工具的配置
+clibundle ai:apply
+
+# 仅应用特定工具的配置
+clibundle ai:apply --tool claude-code
+
+# 兼容模式：对所有工具应用同一提供商
+clibundle ai:apply --profile "OpenAI Official"
+```
+
+#### 使用场景示例
+
+**场景1：多 AI 协作开发**
+- Claude Code → Anthropic（代码生成与重构）
+- Codex → OpenAI（代码补全）
+- Gemini → Google（文档与解释）
+
+**场景2：不同账号分离**
+- 个人项目 → 个人 OpenAI 账号
+- 工作项目 → 公司 Azure OpenAI 账号
+- 实验项目 → DeepSeek 免费账号
+
 ## 配置文件
 
 配置文件位于 `~/.clibundle/tools.json`，格式如下：
@@ -128,6 +187,130 @@ clibundle uninstall --all
 - `packageName`: npm包名
 - `description`: 工具描述
 - `enabled`: 是否启用该工具
+
+## AI 配置（ai.json）
+
+位置：`~/.clibundle/ai.json`
+
+### 简化配置（v2.1 - 多工具协作）
+
+支持为不同工具配置不同提供商，实现多 AI 协作：
+
+```json
+{
+  "version": "2.1.0",
+  "providers": [
+    {
+      "name": "OpenAI Official",
+      "type": "openai",
+      "apiKey": "${OPENAI_API_KEY}",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "name": "Anthropic Official",
+      "type": "anthropic", 
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "baseUrl": "https://api.anthropic.com",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    {
+      "name": "DeepSeek V3",
+      "type": "openai",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "model": "deepseek-coder"
+    }
+  ],
+  "tools": {
+    "openai-codex": {
+      "provider": "OpenAI Official",
+      "enabled": true
+    },
+    "claude-code": {
+      "provider": "DeepSeek V3",
+      "enabled": true
+    },
+    "google-gemini": {
+      "provider": "Google Gemini",
+      "enabled": true
+    },
+    "iflow-cli": {
+      "provider": "iFlow Official",
+      "enabled": false
+    }
+  }
+}
+```
+
+### 配置说明
+
+- **providers**: 提供商列表，每个提供商包含：
+  - `name`: 提供商名称（自定义）
+  - `type`: 提供商类型（`openai`/`anthropic`/`google`/`iflow`）
+  - `apiKey`: API密钥，支持 `${ENV_VAR}` 从环境变量读取
+  - `baseUrl`: API 基础地址
+  - `model`: 模型名称
+- **tools**: 工具配置，每个工具包含：
+  - `provider`: 使用的提供商名称
+  - `enabled`: 是否启用该工具
+
+### 使用步骤（多工具协作）
+
+1. 设置环境变量（Windows PowerShell）：
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+$env:DEEPSEEK_API_KEY = "sk-..."
+```
+
+2. 配置工具提供商：
+```bash
+clibundle ai:set claude-code "Anthropic Official"
+clibundle ai:set openai-codex "OpenAI Official"
+clibundle ai:set google-gemini "Google Gemini"
+```
+
+3. 应用配置：
+```bash
+clibundle ai:apply
+```
+
+### 支持的工具配置
+
+工具会自动写入以下配置文件：
+
+- **OpenAI Codex**
+  - `~/.codex/auth.json`
+  - `~/.codex/config.toml`
+
+- **Claude Code**
+  - `~/.claude/settings.json`
+
+- **iFlow CLI**: 参考 [iFlow 配置文档](https://platform.iflow.cn/cli/configuration/settings)
+  - `~/.iflow/settings.json`
+
+- **Google Gemini CLI**: 参考 [Gemini CLI 配置](https://github.com/google-gemini/gemini-cli)
+  - `~/.gemini/settings.json`
+
+### 高级：自定义映射（可选）
+
+如需自定义映射或支持其他工具，可添加 `customTargets` 字段：
+
+```json
+{
+  "customTargets": [
+    {
+      "type": "json",
+      "path": "~/custom/path/config.json",
+      "mapping": {
+        "apiKey": "auth.key",
+        "baseUrl": "api.endpoint"
+      }
+    }
+  ]
+}
+```
 
 ## 开发
 

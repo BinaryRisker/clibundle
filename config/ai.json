@@ -1,0 +1,60 @@
+{
+  "version": "2.1.0",
+  "description": "CLI Bundle AI configuration file - Multi-tool support",
+  "providers": [
+    {
+      "name": "OpenAI Official",
+      "type": "openai",
+      "apiKey": "${OPENAI_API_KEY}",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "name": "Anthropic Official",
+      "type": "anthropic",
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "baseUrl": "https://api.anthropic.com",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    {
+      "name": "Google Gemini",
+      "type": "google",
+      "apiKey": "${GEMINI_API_KEY}",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "model": "gemini-1.5-pro"
+    },
+    {
+      "name": "iFlow Official",
+      "type": "iflow",
+      "apiKey": "${IFLOW_API_KEY}",
+      "baseUrl": "https://api.iflow.cn/v1",
+      "model": "iflow-default",
+      "proxy": ""
+    },
+    {
+      "name": "DeepSeek V3",
+      "type": "openai",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "model": "deepseek-coder"
+    }
+  ],
+  "tools": {
+    "openai-codex": {
+      "provider": "OpenAI Official",
+      "enabled": true
+    },
+    "claude-code": {
+      "provider": "Anthropic Official", 
+      "enabled": true
+    },
+    "google-gemini": {
+      "provider": "Google Gemini",
+      "enabled": true
+    },
+    "iflow-cli": {
+      "provider": "iFlow Official",
+      "enabled": false
+    }
+  }
+}

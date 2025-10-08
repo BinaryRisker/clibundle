@@ -9,6 +9,7 @@ An npm-based CLI tool manager that supports installing, updating, and uninstalli
 - 🎯 Interactive command-line interface
 - 📁 User configuration files stored in `~/.clibundle` directory
 - 🚀 Support for batch operations
+- 🤖 AI profiles and model switching with reusable multi-tool mappings
 
 ## Installation
 
@@ -70,6 +71,39 @@ clibundle uninstall <tool-name>
 clibundle uninstall --all
 ```
 
+### AI Model & Tools
+
+Initialize AI configuration (creates `~/.clibundle/ai.json` with defaults):
+
+```bash
+clibundle ai:init
+```
+
+List AI profiles and configured targets:
+
+```bash
+clibundle ai:list
+```
+
+Switch active AI profile:
+
+```bash
+clibundle ai:switch <profile-name>
+```
+
+Apply active/selected profile values (api base, model, etc.) to target config files:
+
+```bash
+# apply active profile to all targets
+clibundle ai:apply
+
+# apply a specific profile
+clibundle ai:apply --profile anthopic-claude-3-5-sonnet
+
+# apply to a single target by name/toolId
+clibundle ai:apply --target openai-node-sdk
+```
+
 ## Configuration File
 
 The configuration file is located at `~/.clibundle/tools.json` with the following format:
@@ -128,6 +162,122 @@ The configuration file is located at `~/.clibundle/tools.json` with the followin
 - `packageName`: npm package name
 - `description`: Tool description
 - `enabled`: Whether the tool is enabled
+
+## AI Configuration (ai.json)
+
+Location: `~/.clibundle/ai.json`
+
+### Simplified Configuration (v2.0)
+
+Just configure providers and the active one:
+
+```json
+{
+  "version": "2.0.0",
+  "providers": [
+    {
+      "name": "OpenAI Official",
+      "type": "openai",
+      "apiKey": "${OPENAI_API_KEY}",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "name": "Anthropic Official",
+      "type": "anthropic",
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "baseUrl": "https://api.anthropic.com",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    {
+      "name": "Google Gemini",
+      "type": "google",
+      "apiKey": "${GEMINI_API_KEY}",
+      "model": "gemini-1.5-pro"
+    },
+    {
+      "name": "iFlow Official",
+      "type": "iflow",
+      "apiKey": "${IFLOW_API_KEY}",
+      "baseUrl": "https://api.iflow.cn/v1",
+      "model": "iflow-default"
+    }
+  ],
+  "active": "OpenAI Official"
+}
+```
+
+### Configuration Fields
+
+- **providers**: List of AI providers, each contains:
+  - `name`: Provider name (custom)
+  - `type`: Provider type (`openai`/`anthropic`/`google`/`iflow`)
+  - `apiKey`: API key, supports `${ENV_VAR}` syntax
+  - `baseUrl`: API base URL
+  - `model`: Model name
+- **active**: Currently active provider name
+
+### Built-in Adapters
+
+The tool automatically configures corresponding CLI tools based on `provider.type`:
+
+- `openai` → Auto-configure `~/.codex/auth.json` and `~/.codex/config.toml`
+- `anthropic` → Auto-configure `~/.claude/settings.json`
+- `google` → Auto-configure `~/.gemini/settings.json`
+- `iflow` → Auto-configure `~/.iflow/settings.json`
+
+### Quick Start (3 Steps)
+
+1. Set environment variable (Windows PowerShell):
+```powershell
+$env:OPENAI_API_KEY = "sk-..."
+```
+
+2. Switch provider:
+```bash
+clibundle ai:switch "OpenAI Official"
+```
+
+3. Apply configuration:
+```bash
+clibundle ai:apply
+```
+
+### Supported Tools
+
+Automatically writes to these configuration files:
+
+- **OpenAI Codex**: Reference [CC Switch](https://github.com/farion1231/cc-switch)
+  - `~/.codex/auth.json`
+  - `~/.codex/config.toml`
+
+- **Claude Code**: Reference [CC Switch](https://github.com/farion1231/cc-switch)
+  - `~/.claude/settings.json`
+
+- **iFlow CLI**: Reference [iFlow Configuration](https://platform.iflow.cn/cli/configuration/settings)
+  - `~/.iflow/settings.json`
+
+- **Google Gemini CLI**: Reference [Gemini CLI Configuration](https://github.com/google-gemini/gemini-cli)
+  - `~/.gemini/settings.json`
+
+### Advanced: Custom Mappings (Optional)
+
+To add custom mappings or support other tools, add `customTargets` field:
+
+```json
+{
+  "customTargets": [
+    {
+      "type": "json",
+      "path": "~/custom/path/config.json",
+      "mapping": {
+        "apiKey": "auth.key",
+        "baseUrl": "api.endpoint"
+      }
+    }
+  ]
+}
+```
 
 ## Development
 
