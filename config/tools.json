@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "description": "CLI Bundle tools configuration file",
+  "tools": [
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "command": "claude",
+      "installType": "npm",
+      "packageName": "@anthropic-ai/claude-code",
+      "description": "Anthropic official Claude CLI tool",
+      "enabled": true
+    },
+    {
+      "id": "iflow-cli",
+      "name": "iFlow CLI",
+      "command": "iflow",
+      "installType": "npm",
+      "packageName": "@iflow-ai/iflow-cli",
+      "description": "iFlow AI CLI tool",
+      "enabled": true
+    }
+  ]
+}
