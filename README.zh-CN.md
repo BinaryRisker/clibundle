@@ -96,6 +96,24 @@ clibundle uninstall --all
       "packageName": "@iflow-ai/iflow-cli",
       "description": "iFlow AI CLI工具",
       "enabled": true
+    },
+    {
+      "id": "openai-codex",
+      "name": "OpenAI Codex",
+      "command": "codex",
+      "installType": "npm",
+      "packageName": "@openai/codex",
+      "description": "OpenAI Codex代码生成CLI工具",
+      "enabled": true
+    },
+    {
+      "id": "google-gemini",
+      "name": "Google Gemini CLI",
+      "command": "gemini",
+      "installType": "npm",
+      "packageName": "@google/gemini-cli",
+      "description": "Google Gemini AI CLI工具",
+      "enabled": true
     }
   ]
 }

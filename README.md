@@ -96,6 +96,24 @@ The configuration file is located at `~/.clibundle/tools.json` with the followin
       "packageName": "@iflow-ai/iflow-cli",
       "description": "iFlow AI CLI tool",
       "enabled": true
+    },
+    {
+      "id": "openai-codex",
+      "name": "OpenAI Codex",
+      "command": "codex",
+      "installType": "npm",
+      "packageName": "@openai/codex",
+      "description": "OpenAI Codex CLI tool for code generation",
+      "enabled": true
+    },
+    {
+      "id": "google-gemini",
+      "name": "Google Gemini CLI",
+      "command": "gemini",
+      "installType": "npm",
+      "packageName": "@google/gemini-cli",
+      "description": "Google Gemini AI CLI tool",
+      "enabled": true
     }
   ]
 }
